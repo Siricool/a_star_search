@@ -94,7 +94,7 @@ def choose_input():
     start_index = input('Choose a start index: ')
     end_index = input('Choose a end index: ')
     weight = input('Choose a weight: ')
-    return int(start_index), int(end_index), int(weight)
+    return int(start_index), int(end_index), float(weight)
 
 def get_coordinates(nodes, index):
     cord = []
