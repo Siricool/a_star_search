@@ -19,7 +19,8 @@ class  Node():
         
 def heuristic_function(node, end_node):
     h = abs(node.positionx - end_node.positionx) + abs(node.positiony - end_node.positiony)
-    return h
+    node.h=h
+    return 
 
 def f(node, w):
     node.f = w*node.g+(1-w)*node.h
@@ -27,18 +28,16 @@ def f(node, w):
     
 def select_best_node(frontier_list, w, end_node):
     fbest = None
-    for current_node in frontier_list: 
-        node = current_node
-        h = heuristic_function(node, end_node)
+    for element in frontier_list: #### DETTA ÄR EN DICT NU SÅ MÅSTE ÄNDRA DETTA
+        node = element
+        heuristic_function(node, end_node)
 
         if fbest == None or f(node,w) < f(fbest, w):
             fbest = node
-            i_best = current_node
+            #i_best = node.index                 HÄR SPARAR DE BÄSTA NODEN I NODEN FÖR PATH SENARE
         
-        node = i_best
-        frontier_list.remove(node)
 
-    return node 
+    return fbest 
 
 def expand_graph_search(node, nodes):
     child_list = []
@@ -46,11 +45,10 @@ def expand_graph_search(node, nodes):
     maze=nodes
     actions = {}
     counter=0
-    for element in maze[node.index]:
-        if element != 0 and counter>1:
-            actions[counter-2]=element          #dictionary med state (dvs index) som key, och kostnad
+    for cost in maze[node.index]:
+        if cost != 0 and counter>1:
+            actions[counter-2]=cost          #dictionary med state (dvs index) som key, och kostnad
         counter +=1
-    print("ACTIONS: ", actions)
 
 
     for index, cost in actions.items(): #dvs 100 nodes typ 
@@ -63,6 +61,12 @@ def expand_graph_search(node, nodes):
     return child_list
 
 
+def search_in_reached(child, reached_list):
+    for i in range(len(reached_list)):
+        if reached_list[i].index==child.index:
+            return i, reached_list[i]
+    return -1, None
+
 
 def a_star_search(nodes, start, end, weight):
     startcord = get_coordinates(nodes, start)
@@ -71,27 +75,32 @@ def a_star_search(nodes, start, end, weight):
     start_node = Node(None, startcord, start) # start är index, vi behöver x och y för denna node
     end_node = Node(None, endcord, end) # end är index, vi behöver x och y för denna node
 
-    frontier_list = {}
-    reached_list = {}
+    frontier_list = []
+    reached_list = []
 
-    frontier_list[start] =start_node
-    reached_list[start] =start_node
-
+    frontier_list.append(start_node)
+    reached_list.append(start_node)
+    generated_nodes=0
     while len(frontier_list) > 0:
         node = select_best_node(frontier_list, weight, end_node)
+        frontier_list.remove(node)
 
-        if end_node == node:
+        if end_node.index == node.index:
+            print(generated_nodes)
             return node
 
         child_list = expand_graph_search(node, nodes)
-        print(child_list)
 
-        for child in child_list: #göra en dubbel for-loop? Så att man går igenom reached
-            if child.index in reached_list.keys():
-                print("CHILD EXIST IN REACHED!!")
-                
-
-    return 
+        for child in child_list: 
+            index, reached_node=search_in_reached(child, reached_list)
+            if index==-1:
+                frontier_list.append(child)
+                reached_list.append(child)
+            elif child.cost> reached_node.cost:
+                reached_list[index]= child
+                frontier_list.append(child)
+        generated_nodes+=1
+    return node
 
 def get_nodes():
     maze = []
@@ -124,6 +133,14 @@ def get_coordinates(nodes, index):
 def main():
     start_index, end_index, weight= choose_input()
     nodes = get_nodes()
-    a_star_search(nodes, start_index, end_index, weight)
+    node= a_star_search(nodes, start_index, end_index, weight)
+    print("SLUTNOD: ", node.index)
 
 main()
+
+
+
+## Spara bästa nod ist för parent
+# om den inte hittar path måste den säga det
+# samla ihop path i egen funktion
+# total number of generated within the search process
